@@ -41,8 +41,17 @@ export default function RegisterPage() {
       // Reload auth state
       window.location.href = '/dashboard';
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { error?: { message?: string } } } };
-      setApiError(e?.response?.data?.error?.message ?? 'Registration failed. Please try again.');
+      const e = err as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      const apiMessage = e?.response?.data?.error?.message;
+      setApiError(
+        apiMessage ??
+          (!e?.response
+            ? 'Could not reach the API. Start the Django backend at http://127.0.0.1:8000 and try again.'
+            : e?.message ?? 'Registration failed. Please try again.')
+      );
     }
   };
 
