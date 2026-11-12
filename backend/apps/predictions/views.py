@@ -69,6 +69,8 @@ def create_prediction(request):
         except TrainedModelVersion.DoesNotExist:
             pass
 
+    historical_baseline = result.get('historical_baseline') or {}
+
     # Save prediction record regardless of outcome (for audit trail)
     record = PredictionRecord.objects.create(
         user=request.user,
@@ -86,12 +88,12 @@ def create_prediction(request):
         currency=result.get('currency', 'INR'),
         price_unit=result.get('price_unit', 'Quintal'),
         historical_baseline_price=(
-            decimal.Decimal(str(result['historical_baseline']['latest_price']))
-            if result.get('historical_baseline', {}).get('latest_price') else None
+            decimal.Decimal(str(historical_baseline['latest_price']))
+            if historical_baseline.get('latest_price') else None
         ),
         historical_baseline_date=(
-            result['historical_baseline'].get('latest_date')
-            if result.get('historical_baseline') else None
+            historical_baseline.get('latest_date')
+            if historical_baseline else None
         ),
         price_change=decimal.Decimal(str(result['price_change'])) if result.get('price_change') is not None else None,
         price_change_pct=decimal.Decimal(str(result['price_change_pct'])) if result.get('price_change_pct') is not None else None,

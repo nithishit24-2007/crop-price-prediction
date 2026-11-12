@@ -114,6 +114,15 @@ class TestAuthentication:
         assert 'refresh' in response.data
         assert response.data['user']['username'] == 'newuser'
 
+        created_user = User.objects.get(username='newuser')
+        assert created_user.check_password('NewPass@123')
+        email_login = api_client.post('/api/v1/auth/login/', {
+            'username': 'new@example.com',
+            'password': 'NewPass@123',
+        }, format='json')
+        assert email_login.status_code == status.HTTP_200_OK
+        assert email_login.data['user']['id'] == created_user.id
+
     def test_register_mismatched_passwords(self, api_client):
         """Test registration fails when passwords don't match."""
         response = api_client.post('/api/v1/auth/register/', {
@@ -133,6 +142,13 @@ class TestAuthentication:
         assert 'access' in response.data
         assert 'refresh' in response.data
         assert response.data['user']['username'] == 'testuser'
+
+    def test_login_with_email(self, api_client, user):
+        response = api_client.post('/api/v1/auth/login/', {
+            'username': user.email, 'password': 'TestPass@123'
+        }, format='json')
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['user']['id'] == user.id
 
     def test_login_wrong_password(self, api_client, user):
         """Test login fails with wrong password."""
@@ -291,6 +307,57 @@ class TestPredictionsAPI:
         response = auth_client.get('/api/v1/predictions/history/')
         assert response.status_code == status.HTTP_200_OK
         assert response.data['count'] == 0
+
+    def test_prediction_history_survives_logout_and_relogin(
+        self, api_client, user, sample_crop, sample_market
+    ):
+        import datetime
+        from unittest.mock import patch
+
+        credentials = {'username': 'testuser', 'password': 'TestPass@123'}
+        login = api_client.post('/api/v1/auth/login/', credentials, format='json')
+        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {login.data["access"]}')
+
+        with patch('ml.predict.predict_price', return_value={
+            'status': 'no_model',
+            'predicted_price': None,
+            'currency': 'INR',
+            'price_unit': 'Quintal',
+            'historical_baseline': None,
+            'price_change': None,
+            'price_change_pct': None,
+            'model_info': {},
+            'message': 'No active model.',
+        }):
+            created = api_client.post('/api/v1/predictions/', {
+                'crop_id': sample_crop.id,
+                'market_id': sample_market.id,
+                'target_date': (
+                    datetime.date.today() + datetime.timedelta(days=7)
+                ).isoformat(),
+            }, format='json')
+
+        assert created.status_code == status.HTTP_200_OK
+        prediction_id = created.data['data']['prediction']['id']
+
+        logout = api_client.post(
+            '/api/v1/auth/logout/',
+            {'refresh': login.data['refresh']},
+            format='json',
+        )
+        assert logout.status_code == status.HTTP_200_OK
+
+        api_client.credentials()
+        relogin = api_client.post('/api/v1/auth/login/', {
+            'username': user.email,
+            'password': credentials['password'],
+        }, format='json')
+        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {relogin.data["access"]}')
+        history = api_client.get('/api/v1/predictions/history/')
+
+        assert history.status_code == status.HTTP_200_OK
+        assert history.data['count'] == 1
+        assert history.data['results'][0]['id'] == prediction_id
 
     def test_predict_no_model(self, auth_client, sample_crop, sample_market, sample_prices):
         """Prediction without a trained active model returns no_model status."""

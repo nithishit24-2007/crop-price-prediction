@@ -36,12 +36,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('Dry run — no models were trained.'))
             if record_count < 30:
                 self.stdout.write(self.style.ERROR(
-                    f'⚠ Insufficient data: need at least 30 records, found {record_count}.\n'
+                    f'Insufficient data: need at least 30 records, found {record_count}.\n'
                     f'  Run: python manage.py load_demo_data'
                 ))
             else:
                 self.stdout.write(self.style.SUCCESS(
-                    f'✓ Data looks sufficient for training ({record_count} records).'
+                    f'Data looks sufficient for training ({record_count} records).'
                 ))
             return
 
@@ -64,7 +64,7 @@ class Command(BaseCommand):
             return
 
         self.stdout.write(self.style.SUCCESS(
-            f'\n✓ Training completed!\n'
+            f'\nTraining completed!\n'
             f'  Training rows: {result["training_rows"]}\n'
             f'  Test rows: {result["test_rows"]}\n'
             f'  Best model: {result["best_model"]} (RMSE: {result["best_rmse"]:.2f})\n'

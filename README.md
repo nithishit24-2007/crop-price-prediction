@@ -20,6 +20,17 @@ python manage.py train_crop_models
 python manage.py runserver 8000
 ```
 
+On Windows PowerShell, start the backend with:
+```powershell
+cd backend
+.\venv\Scripts\Activate.ps1
+python manage.py migrate
+python manage.py load_demo_data
+python manage.py train_crop_models
+python manage.py runserver 127.0.0.1:8000
+```
+This seeds synthetic example data and trains the prediction model. Keep this terminal open while using the frontend.
+
 ### Frontend
 ```bash
 cd frontend

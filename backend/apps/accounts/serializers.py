@@ -35,7 +35,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password', 'password2', 'first_name', 'last_name', 'display_name']
 
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
+        if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("A user with this email already exists.")
         return value
 
@@ -92,6 +92,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
+        identifier = attrs.get('username', '').strip()
+        if '@' in identifier:
+            user = User.objects.filter(email__iexact=identifier).first()
+            if user:
+                attrs = {**attrs, 'username': user.username}
+
         data = super().validate(attrs)
         user = self.user
         data['user'] = UserSerializer(user).data

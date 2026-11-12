@@ -145,9 +145,8 @@ class Command(BaseCommand):
         start_date = date.today() - timedelta(days=num_days)
         total_created = 0
 
-        # Generate prices for a representative subset
-        selected_crops = list(crops.values())[:5]
-        selected_markets = list(markets.values())[:4]
+        selected_crops = list(crops.values())
+        selected_markets = list(markets.values())
 
         self.stdout.write(f'Generating {num_days} days of price data...')
         with transaction.atomic():
@@ -182,10 +181,10 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.WARNING(f'  {crop.name} @ {market.name}: {e}'))
 
         self.stdout.write(self.style.SUCCESS(
-            f'\n✓ Demo data loaded successfully!'
+            f'\nDemo data loaded successfully!'
             f'\n  Crops: {len(crops)}'
             f'\n  Markets: {len(markets)}'
-            f'\n  Price records attempted: {total_created}'
-            f'\n\n⚠ NOTE: All price data is SYNTHETIC and for demonstration only.'
+            f'\n  Price records processed: {total_created}'
+            f'\n\nNOTE: All price data is SYNTHETIC and for demonstration only.'
             f'\n  These are NOT real market prices. Label: is_demo_data=True'
         ))

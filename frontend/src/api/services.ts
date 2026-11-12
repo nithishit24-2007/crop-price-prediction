@@ -21,7 +21,9 @@ export const authApi = {
   me: () =>
     apiClient.get<ApiResponse<User>>('/auth/me/'),
 
-  updateProfile: (data: Partial<User & { profile: Partial<User['profile']> }>) =>
+  updateProfile: (data: Partial<Omit<User, 'profile'>> & {
+    profile?: Partial<NonNullable<User['profile']>>;
+  }) =>
     apiClient.patch<ApiResponse<User>>('/auth/me/', data),
 
   changePassword: (old_password: string, new_password: string, new_password2: string) =>

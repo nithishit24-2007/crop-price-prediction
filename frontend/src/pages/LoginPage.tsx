@@ -52,9 +52,9 @@ export default function LoginPage() {
         <div className="card p-8 shadow-xl">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
             <div className="form-group">
-              <label htmlFor="username" className="label">Username</label>
+              <label htmlFor="username" className="label">Username or Email</label>
               <input id="username" type="text" autoComplete="username"
-                className="input" placeholder="your_username" {...register('username')} />
+                className="input" placeholder="your_username or you@example.com" {...register('username')} />
               {errors.username && <p className="error-msg"><AlertCircle className="w-3.5 h-3.5" />{errors.username.message}</p>}
             </div>
 
